@@ -1,4 +1,5 @@
 # Cyber-HoneyPot
+<<<<<<< HEAD
 
 A full-stack cybersecurity honeypot system that lures attackers into realistic decoy services, captures their activity in real-time, and visualises everything on a live monitoring dashboard.
 
@@ -224,3 +225,11 @@ VITE_API_URL=http://localhost:8000
 ## License
 
 See [LICENSE](LICENSE).
+=======
+This website was done to show how a honeypot works
+## FYI
+Honeypot: Is a system that mimic the actual(real) computer to diverge the attacker
+
+- I have done the front end only so far even though there are still some improvements i could adapt to it 
+- the backend is still in works though
+>>>>>>> 740ea924e3e11f993ccb5e78d3302f68cee351b7

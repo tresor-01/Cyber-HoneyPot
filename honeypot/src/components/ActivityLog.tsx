@@ -1,70 +1,13 @@
-import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, ArrowRight, Clock } from "lucide-react";
+import type { ActivityLog as ActivityLogEntry } from "@/lib/api";
 
-interface LogEntry {
-  id: string;
-  timestamp: Date;
-  event: "connection" | "authentication" | "command" | "file_access" | "disconnection";
-  source: string;
-  details: string;
-  success: boolean;
+interface ActivityLogProps {
+  logs: ActivityLogEntry[];
 }
 
-export const ActivityLog = () => {
-  const [logs, setLogs] = useState<LogEntry[]>([]);
-
-  const eventTypes = [
-    { event: "connection", details: "New connection established", success: true },
-    { event: "authentication", details: "Login attempt with credentials admin:admin", success: false },
-    { event: "authentication", details: "Login attempt with credentials root:password", success: false },
-    { event: "command", details: "Executed command: ls -la", success: true },
-    { event: "command", details: "Executed command: cat /etc/passwd", success: true },
-    { event: "file_access", details: "Attempted to access /etc/shadow", success: false },
-    { event: "file_access", details: "Downloaded file: backup.zip", success: true },
-    { event: "disconnection", details: "Connection terminated", success: true }
-  ];
-
-  const generateRandomIP = () => {
-    return `${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}.${Math.floor(Math.random() * 255)}`;
-  };
-
-  const generateLogEntry = (): LogEntry => {
-    const eventType = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-    return {
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date(),
-      event: eventType.event as LogEntry["event"],
-      source: generateRandomIP(),
-      details: eventType.details,
-      success: eventType.success
-    };
-  };
-
-  useEffect(() => {
-    // Add initial logs
-    setLogs([generateLogEntry(), generateLogEntry(), generateLogEntry()]);
-
-    const interval = setInterval(() => {
-      if (Math.random() > 0.5) {
-        setLogs(prev => [generateLogEntry(), ...prev.slice(0, 9)]);
-      }
-    }, 3000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const getEventColor = (event: LogEntry["event"]) => {
-    switch (event) {
-      case "connection": return "text-primary";
-      case "authentication": return "text-warning";
-      case "command": return "text-success";
-      case "file_access": return "text-destructive";
-      case "disconnection": return "text-muted-foreground";
-      default: return "text-foreground";
-    }
-  };
+export const ActivityLog = ({ logs }: ActivityLogProps) => {
 
   return (
     <Card className="neon-border">
@@ -86,17 +29,18 @@ export const ActivityLog = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="terminal-text text-xs text-muted-foreground">
-                    {log.timestamp.toLocaleTimeString()}
+                    {new Date(log.timestamp).toLocaleTimeString()}
                   </span>
                   <Badge variant={log.success ? "success" : "destructive"} className="text-xs">
-                    {log.event.toUpperCase()}
+                    {log.event_type.toUpperCase()}
                   </Badge>
+                  <span className="terminal-text text-xs text-muted-foreground">[{log.service}]</span>
                 </div>
                 <div className="terminal-text text-sm mb-1">
                   {log.details}
                 </div>
                 <div className="flex items-center gap-1 terminal-text text-xs text-muted-foreground">
-                  <span className="font-mono text-destructive">{log.source}</span>
+                  <span className="font-mono text-destructive">{log.source_ip}</span>
                   <ArrowRight className="h-3 w-3" />
                   <span className="font-mono text-primary">honeypot.local</span>
                 </div>

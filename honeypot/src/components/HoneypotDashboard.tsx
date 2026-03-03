@@ -1,10 +1,21 @@
+import { useState } from "react";
 import { useHoneypotWebSocket } from "@/hooks/useHoneypotWebSocket";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Shield, AlertTriangle, Server,
-  Network, Terminal, Wifi, WifiOff, Loader2,
+  Network, Terminal, Wifi, WifiOff, Loader2, Lock,
 } from "lucide-react";
 import { ServiceMonitor } from "./ServiceMonitor";
 import { ThreatFeed }     from "./ThreatFeed";
@@ -13,6 +24,17 @@ import { ActivityLog }    from "./ActivityLog";
 export const HoneypotDashboard = () => {
   const { state, toggleActive } = useHoneypotWebSocket();
   const { active, stats, services, logs, threats, wsStatus } = state;
+
+  const [showPermissionDialog, setShowPermissionDialog] = useState(false);
+
+  const handleToggle = () => {
+    if (!active) {
+      // Ask for permission before starting
+      setShowPermissionDialog(true);
+    } else {
+      toggleActive(false);
+    }
+  };
 
   const honeypot = stats?.honeypot;
   const system   = stats?.system;
@@ -29,6 +51,54 @@ export const HoneypotDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background p-4">
+      {/* ── Permission Dialog ─────────────────────────────────────────── */}
+      <AlertDialog open={showPermissionDialog} onOpenChange={setShowPermissionDialog}>
+        <AlertDialogContent className="neon-border max-w-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-primary glow-text">
+              <Lock className="h-5 w-5" />
+              Permission Required
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  You are about to start the <span className="text-foreground font-semibold">Cybersecurity Honeypot</span> on this machine.
+                  This will open the following network listeners on your computer:
+                </p>
+                <ul className="grid grid-cols-2 gap-1 font-mono text-xs border border-border rounded-md p-3 bg-muted/30">
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> SSH &nbsp;&nbsp;&nbsp;:2222</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> FTP &nbsp;&nbsp;&nbsp;:2121</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> HTTP &nbsp;&nbsp;:8080</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> SMTP &nbsp;&nbsp;:2525</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> Telnet :2323</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> MySQL &nbsp;:3306</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> RDP &nbsp;&nbsp;&nbsp;:3389</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> Redis &nbsp;:6379</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> VNC &nbsp;&nbsp;&nbsp;:5900</li>
+                  <li className="flex items-center gap-1"><span className="text-primary">▸</span> PgSQL &nbsp;:5432</li>
+                </ul>
+                <p className="text-warning text-xs flex items-start gap-1">
+                  <AlertTriangle className="h-3 w-3 mt-0.5 shrink-0" />
+                  These ports will be accessible on your network. Only proceed if you understand the risks and have the necessary permissions to run honeypot services on this system.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="font-mono">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="font-mono bg-primary text-primary-foreground hover:bg-primary/90"
+              onClick={() => {
+                setShowPermissionDialog(false);
+                toggleActive(true);
+              }}
+            >
+              Allow &amp; Start
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="max-w-7xl mx-auto space-y-6">
         {/* ── Header ────────────────────────────────────────────────────── */}
         <div className="flex items-center justify-between">
@@ -53,7 +123,7 @@ export const HoneypotDashboard = () => {
               {active ? "ACTIVE" : "INACTIVE"}
             </Badge>
             <Button
-              onClick={() => toggleActive(!active)}
+              onClick={handleToggle}
               variant={active ? "destructive" : "default"}
               className="font-mono"
               disabled={wsStatus === "connecting"}
